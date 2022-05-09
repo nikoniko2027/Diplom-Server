@@ -31,7 +31,7 @@ class ConnectDB:
             cur.execute(sql, (login, password, email))
             con.commit()
             con.close()
-            return "Successful registration", 200 # Успешная регистрация
+            return "Successful registration", 202 # Успешная регистрация
         except:
             con.close()
             return "An account with this username already exists.", 403 # Пользователь с указанным логином уже существует
@@ -47,10 +47,44 @@ class ConnectDB:
         sql = "SELECT `Password` FROM `Users` WHERE `Login` = %s"
         cur.execute(sql, login)
         res = cur.fetchone()
+        print(res["Password"])
         con.commit()
         con.close()
         try:
             return res["Password"]
+        except:
+            return None
+
+
+
+
+    ### SELECT для получения данных аккаунта без пароля
+    def GetAccountInfo(self, login):
+        con = pymysql.connect(host=Host, user=User, password=Pass, database=DB, cursorclass=pymysql.cursors.DictCursor)
+
+        cur = con.cursor()
+        sql = "SELECT `ID`, `Login`, `Email`, `MMR`, `UUID` FROM `Users` WHERE `Login` LIKE %s"
+        cur.execute(sql, login)
+        res = cur.fetchone()
+        con.commit()
+        con.close()
+        return res
+
+
+
+
+    ### SELECT получения MMR пользователя
+    def GetUserMMR(self, login):
+        con = pymysql.connect(host=Host, user=User, password=Pass, database=DB, cursorclass=pymysql.cursors.DictCursor)
+
+        cur = con.cursor()
+        sql = "SELECT `MMR` FROM `Users` WHERE `Login` = %s"
+        cur.execute(sql, login)
+        res = cur.fetchone()
+        con.commit()
+        con.close()
+        try:
+            return res["MMR"]
         except:
             return None
 

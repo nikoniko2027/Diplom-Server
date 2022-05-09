@@ -45,17 +45,20 @@ class Diplom(Resource):
     def Auth():
         login = request.form['login']
         password = request.form['pass']
-        email = request.form['email']
+        #email = request.form['email']
 
         if DB.GetStatus():
             DBpass = DB.UserAuth(login)
+            #print(000, DBpass)
             ###
             if DBpass != None:
                 ###
+                #print(111, DBpass)
+                #print(222, password)
                 if DBpass == password:
                     UUID = uuid.uuid4().hex
                     DB.UserUUID(login, UUID)
-                    return "Successful authorization.", 201 # Успешная авторизация (НУЖЕН ТОКЕН ПОТОМ)
+                    return "Successful authorization.", 201 # Успешная авторизация
                 else:
                     return "The specified username or password is incorrect", 401 # Неправильный пароль
                 ###
@@ -65,6 +68,16 @@ class Diplom(Resource):
         else:
             print("Failed to connect to the database. Try again later.")
             return "Failed to connect to the database. Try again later.", 503
+
+
+
+
+        ### Получение данных об аккаунте
+    @app.route('/GetAccountInfo', methods=['POST'])
+    def GetAccountInfo():
+        login = request.form['login']
+        return DB.GetAccountInfo(login), 210
+
 
 
 
