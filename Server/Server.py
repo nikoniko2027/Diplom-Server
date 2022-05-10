@@ -1,12 +1,6 @@
 from flask import Flask, request, send_file
 from flask_restful import Api, Resource, reqparse
 
-
-import os
-import base64
-import pickle
-import json
-
 app = Flask(__name__)
 api = Api(app)
 
@@ -77,6 +71,25 @@ class Diplom(Resource):
     def GetAccountInfo():
         login = request.form['login']
         return DB.GetAccountInfo(login), 210
+
+
+
+
+        ### Получение данных об аккаунте по UUID
+    @app.route('/GetLoadAuth', methods=['POST'])
+    def GetLoadAuth():
+        myuuid = request.form['uuid']
+        return DB.GetUserInfoWithUUID(myuuid), 210
+
+
+
+
+
+        ### Получение данных об аккаунте по UUID
+    @app.route('/GetInfoAuthUUID', methods=['POST'])
+    def GetInfoAuthUUID():
+        myuuid = request.form['uuid']
+        return DB.GetUserInfoWithUUID(myuuid), 211
 
 
 

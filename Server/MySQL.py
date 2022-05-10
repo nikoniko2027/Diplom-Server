@@ -88,6 +88,21 @@ class ConnectDB:
         except:
             return None
 
+
+
+
+    ### SELECT получения Login + MMR пользователя по UUID
+    def GetUserInfoWithUUID(self, myuuid):
+        con = pymysql.connect(host=Host, user=User, password=Pass, database=DB, cursorclass=pymysql.cursors.DictCursor)
+
+        cur = con.cursor()
+        sql = "SELECT `ID`, `MMR`, `Login`, `UUID`, `Email` FROM `Users` WHERE `UUID` = %s"
+        cur.execute(sql, myuuid)
+        res = cur.fetchone()
+        con.commit()
+        con.close()
+        return res
+
         
         
 
