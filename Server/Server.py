@@ -34,21 +34,18 @@ class Diplom(Resource):
 
 
 
+
         ### Авторизация клиента
     @app.route('/Auth', methods=['POST'])
     def Auth():
         login = request.form['login']
         password = request.form['pass']
-        #email = request.form['email']
 
         if DB.GetStatus():
             DBpass = DB.UserAuth(login)
-            #print(000, DBpass)
             ###
             if DBpass != None:
                 ###
-                #print(111, DBpass)
-                #print(222, password)
                 if DBpass == password:
                     UUID = uuid.uuid4().hex
                     DB.UserUUID(login, UUID)
@@ -84,13 +81,66 @@ class Diplom(Resource):
 
 
 
-
         ### Получение данных об аккаунте по UUID
     @app.route('/GetInfoAuthUUID', methods=['POST'])
     def GetInfoAuthUUID():
         myuuid = request.form['uuid']
         return DB.GetUserInfoWithUUID(myuuid), 211
 
+
+
+
+        ### Отправка сообщения в чат
+    @app.route('/SendChatMessage', methods=['POST'])
+    def SendChatMessage():
+        myuuid = request.form['uuid']
+        message = request.form['message'] # WebCommunication плохо работает с русскими символами.
+        DB.SendMessage(myuuid, message)
+        return "Successfull send", 222
+
+
+
+        ### Получение 10 последних сообщений чата
+    @app.route('/GetChatMessage', methods=['POST'])
+    def GetChatMessage():
+        return DB.GetLast10Message(), 223
+
+
+
+        ### Генерация лобби
+    @app.route('/GenerateLobby', methods=['POST'])
+    def GenerateLobby():
+        login = request.form['firstplayer']
+        correctanswer = request.form['correctanswer']
+        q1 = request.form['q1']
+        q2 = request.form['q2']
+        q3 = request.form['q3']
+        q4 = request.form['q4']
+        q5 = request.form['q5']
+        gametype = request.form['gametype']
+        DB.GenerateLobby(login, correctanswer, gametype, q1, q2, q3, q4, q5)
+        return "Successfull Generate Lobby", 224
+
+
+
+
+        ### Получение всех лобби
+    @app.route('/GetLobbies', methods=['POST'])
+    def GetLobbies():
+        login = request.form['login']
+        return DB.GetLobbies(login), 225
+
+
+
+
+        ### Получение всех лобби
+    @app.route('/EndLobby', methods=['POST'])
+    def EndLobby():
+        login = request.form['secondplayer']
+        id = request.form['id']
+        correctanswer = request.form['correctanswer']
+        DB.EndLobby(login, correctanswer, id)
+        return "Successfull End Lobby", 226
 
 
 
