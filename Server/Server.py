@@ -95,6 +95,7 @@ class Diplom(Resource):
     def SendChatMessage():
         myuuid = request.form['uuid']
         message = request.form['message'] # WebCommunication плохо работает с русскими символами.
+        print(message)
         DB.SendMessage(myuuid, message)
         return "Successfull send", 222
 

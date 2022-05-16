@@ -90,7 +90,7 @@ class ConnectDB:
 
 
 
-    ### SELECT получения Login + MMR пользователя по UUID
+    ### SELECT получения профиля пользователя по UUID
     def GetUserInfoWithUUID(self, myuuid):
         con = pymysql.connect(host=Host, user=User, password=Pass, database=DB, cursorclass=pymysql.cursors.DictCursor)
 
@@ -100,6 +100,18 @@ class ConnectDB:
         res = cur.fetchone()
         con.commit()
         con.close()
+
+        con = pymysql.connect(host=Host, user=User, password=Pass, database=DB, cursorclass=pymysql.cursors.DictCursor)
+        cur = con.cursor()
+        sql = "SELECT * FROM `Lobby` WHERE `FirstPlayer` LIKE %s OR `SecondPlayer` LIKE %s"
+        cur.execute(sql, (res["Login"], res["Login"]))
+        arr = list()
+        for i in cur:
+            arr.append(i)
+        res["Lobbies"] = json.dumps(arr)
+        con.commit()
+        con.close()
+        print(res)
         return res
 
         
