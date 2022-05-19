@@ -1,5 +1,8 @@
+#!/usr/bin/python3
+
 import pymysql
 import json
+import random
 
 Host = 'db3.myarena.ru'
 User = 'u12254_diplom'
@@ -111,13 +114,13 @@ class ConnectDB:
         res["Lobbies"] = json.dumps(arr)
         con.commit()
         con.close()
-        print(res)
+
         return res
 
         
         
 
-    ### INSERT uuid пользователя при авторизации
+    ### UPDATE uuid пользователя при авторизации
     def UserUUID(self, login, uuid):
         con = pymysql.connect(host=Host, user=User, password=Pass, database=DB, cursorclass=pymysql.cursors.DictCursor)
 
@@ -182,6 +185,92 @@ class ConnectDB:
 
 
 
+
+
+
+
+
+
+    def GenerateLobbyNewWithoutIMG(self, login, mmr, gametype):
+            ### Получение вопросов
+        con = pymysql.connect(host=Host, user=User, password=Pass, database=DB, cursorclass=pymysql.cursors.DictCursor)
+        cur = con.cursor()
+        if login == "Random":
+            sql = "SELECT `ID` FROM `Task`"
+            cur.execute(sql)
+        else:
+            sql = "SELECT `ID` FROM `Task` WHERE `Type` LIKE %s"
+            cur.execute(sql, gametype)
+
+        con.commit()
+        con.close()
+
+            ### Выбор 5 вопросов
+        tasks = list()
+        for i in cur:
+            tasks.append(i['ID'])
+
+        res = list()
+        for _ in range(5):
+            X = random.choice(tasks)
+            res.append(X)
+            tasks.remove(X)
+        
+
+            ### Создание лобби
+        con = pymysql.connect(host=Host, user=User, password=Pass, database=DB, cursorclass=pymysql.cursors.DictCursor)
+        cur = con.cursor()
+        sql = "INSERT INTO `u12254_diplom`.`Lobby` (`FirstPlayer`, `FirstMMR`,  `LobbyOpen`, `GameType`, `Q1`, `Q2`, `Q3`, `Q4`, `Q5`) VALUES ( %s, %s,'1', %s, %s, %s, %s, %s, %s);"
+        cur.execute(sql, (login, mmr, gametype, res[0], res[1], res[2], res[3], res[4]))
+        lastid = con.insert_id()
+        con.commit()
+        con.close()
+        print("!!!!!!!!", mmr)
+        return lastid # возврат ID лобби
+
+
+
+
+    def StartLobby(self, lobbyid):
+        con = pymysql.connect(host=Host, user=User, password=Pass, database=DB, cursorclass=pymysql.cursors.DictCursor)
+        cur = con.cursor()
+        sql = "SELECT `Q1`, `Q2`, `Q3`, `Q4`, `Q5`  FROM `Lobby` WHERE `ID` = %s"
+        cur.execute(sql, lobbyid)
+        res = cur.fetchone()
+        con.commit()
+        con.close()
+        return res
+
+
+
+
+    def GetLobbyQuestions(self, Questions):
+        arr = list()
+        for i in range(5):
+            con = pymysql.connect(host=Host, user=User, password=Pass, database=DB, cursorclass=pymysql.cursors.DictCursor)
+            cur = con.cursor()
+            sql = "SELECT * FROM `Task` WHERE `ID` = %s"
+            cur.execute(sql, Questions[i])
+            arr.append(cur.fetchone())
+            con.commit()
+            con.close()
+        return json.dumps(arr)
+
+
+
+
+    def FirstSendLobby(self, lobbyid, answers):
+        con = pymysql.connect(host=Host, user=User, password=Pass, database=DB, cursorclass=pymysql.cursors.DictCursor)
+        cur = con.cursor()
+        sql = "UPDATE `Lobby` SET `FirstPlayerAns`= %s WHERE `ID` = %s;"
+        cur.execute(sql, (answers, lobbyid))
+        con.commit()
+        con.close()
+
+
+
+
+
     def SupGetLobbiesMMR(self, login):
         con = pymysql.connect(host=Host, user=User, password=Pass, database=DB, cursorclass=pymysql.cursors.DictCursor)
         cur = con.cursor()
@@ -220,3 +309,19 @@ class ConnectDB:
         res = cur.fetchone()
         con.commit()
         con.close()
+
+
+
+
+
+
+    def Test(self):
+        con = pymysql.connect(host=Host, user=User, password=Pass, database=DB, cursorclass=pymysql.cursors.DictCursor)
+        cur = con.cursor()
+        sql = "SELECT * FROM `Task`"
+        cur.execute(sql)
+        res = cur.fetchone()
+        #print(res)
+        con.commit()
+        con.close()
+        return res

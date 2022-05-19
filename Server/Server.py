@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 from flask import Flask, request, send_file
 from flask_restful import Api, Resource, reqparse
 
@@ -18,6 +20,8 @@ class Diplom(Resource):
     def ReconnectDB():
         DB = ConnectDB()
 
+
+########## АВТОРИЗАЦИЯ И РЕГИСТРАЦИЯ ##########
 
         ### Регистрация клиента
     @app.route('/Register', methods=['POST'])
@@ -63,6 +67,8 @@ class Diplom(Resource):
 
 
 
+########## ДАННЫЕ АККАУНТА ##########
+
         ### Получение данных об аккаунте
     @app.route('/GetAccountInfo', methods=['POST'])
     def GetAccountInfo():
@@ -90,6 +96,8 @@ class Diplom(Resource):
 
 
 
+########## РАБОТА С ЧАТОМ ##########
+
         ### Отправка сообщения в чат
     @app.route('/SendChatMessage', methods=['POST'])
     def SendChatMessage():
@@ -108,7 +116,10 @@ class Diplom(Resource):
 
 
 
-        ### Генерация лобби
+
+########## РАБОТА С ЛОББИ ##########
+
+        ### Генерация лобби 
     @app.route('/GenerateLobby', methods=['POST'])
     def GenerateLobby():
         login = request.form['firstplayer']
@@ -145,6 +156,57 @@ class Diplom(Resource):
 
 
 
+        ### Генерация лобби
+    @app.route('/GenerateLobbyNew', methods=['POST'])
+    def GenerateLobbyNew():
+        login = request.form['login']
+        mmr = request.form['mmr']
+        gametype = request.form['gametype']
+        return {'LobbyID': DB.GenerateLobbyNewWithoutIMG(login, mmr, gametype)}, 240
+
+
+
+        ### Получение ID вопросов с ответами для сгенерированного лобби
+    @app.route('/StartLobby', methods=['POST'])
+    def StartLobby():
+        return DB.StartLobby(request.form['lobbyid']), 241
+
+
+
+    @app.route('/GetLobbyQuestions', methods=['POST'])
+    def GetLobbyQuestions():
+        Questions = list()
+        Questions.append(request.form['Q1'])
+        Questions.append(request.form['Q2'])
+        Questions.append(request.form['Q3'])
+        Questions.append(request.form['Q4'])
+        Questions.append(request.form['Q5'])
+        return DB.GetLobbyQuestions(Questions), 242
+
+
+
+    @app.route('/FirstSendLobby', methods=['POST'])
+    def FirstSendLobby():
+        lobbyid = request.form['lobbyid']
+        answers = request.form['answers']
+        DB.FirstSendLobby(lobbyid, answers)
+        return "Successfull generate new lobby", 243
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+########## ПРОЧЕЕ ##########
 
         ### Загрузка фото на сервер
     @app.route('/UploadFile', methods=['POST'])
@@ -171,6 +233,7 @@ class Diplom(Resource):
 
 
 
+
 api.add_resource(Diplom)
 if __name__ == '__main__':
-    app.run(debug=False)
+    app.run(host='0.0.0.0', debug=False) # host='185.217.199.78', port=5971, 
