@@ -9,6 +9,8 @@ User = 'u12254_diplom'
 Pass = 'nikoniko2027'
 DB = 'u12254_diplom'
 
+DefaultRegisterMMR = 100
+DefaultLobbyMMR = 10
 
 class ConnectDB:
 
@@ -29,9 +31,9 @@ class ConnectDB:
         con = pymysql.connect(host=Host, user=User, password=Pass, database=DB, cursorclass=pymysql.cursors.DictCursor)
 
         cur = con.cursor()
-        sql = "INSERT INTO `u12254_diplom`.`Users` (`ID`, `Login`, `Password`, `Email`, `MMR`) VALUES (NULL, %s, %s, %s, '159')"
+        sql = "INSERT INTO `u12254_diplom`.`Users` (`ID`, `Login`, `Password`, `Email`, `MMR`) VALUES (NULL, %s, %s, %s, %s)"
         try:
-            cur.execute(sql, (login, password, email))
+            cur.execute(sql, (login, password, email, DefaultRegisterMMR))
             con.commit()
             con.close()
             return "Successful registration", 202 # Успешная регистрация
@@ -85,10 +87,7 @@ class ConnectDB:
         res = cur.fetchone()
         con.commit()
         con.close()
-        try:
-            return res["MMR"]
-        except:
-            return None
+        return res["MMR"]
 
 
 
@@ -225,7 +224,7 @@ class ConnectDB:
         lastid = con.insert_id()
         con.commit()
         con.close()
-        print("!!!!!!!!", mmr)
+
         return lastid # возврат ID лобби
 
 
@@ -271,26 +270,15 @@ class ConnectDB:
 
 
 
-    def SupGetLobbiesMMR(self, login):
-        con = pymysql.connect(host=Host, user=User, password=Pass, database=DB, cursorclass=pymysql.cursors.DictCursor)
-        cur = con.cursor()
-        sql = "SELECT `MMR` FROM `Users` WHERE `Login` = %s"
-        cur.execute(sql, login)
-        mmr = cur.fetchone()
-        con.commit()
-        con.close()
-        return mmr['MMR']
 
     ### SELECT получения открытых лобби
     def GetLobbies(self, login):
-
         con = pymysql.connect(host=Host, user=User, password=Pass, database=DB, cursorclass=pymysql.cursors.DictCursor)
         cur = con.cursor()
-        sql = "SELECT * FROM `Lobby` WHERE `FirstPlayer` != %s AND `LobbyOpen` = 1"
+        sql = "SELECT `ID`, `FirstPlayer`, `FirstMMR`, `GameType`, `Q1`, `Q2`, `Q3`, `Q4`, `Q5` FROM `Lobby` WHERE `FirstPlayer` != %s AND `LobbyOpen` = 1"
         cur.execute(sql, login)
         arr = list()
         for i in cur:
-            i['MMR'] = self.SupGetLobbiesMMR(i['FirstPlayer'])
             arr.append(i)
         res = json.dumps(arr)
         con.commit()
@@ -299,17 +287,74 @@ class ConnectDB:
 
 
 
+    ### Обновление ММР у пользователей после закрытия лобби
+    def SupEndLobbyChangeMMR(self, FirstPlayer, SecondPlayer, SecondAns, MMR, LobbyID):
+        FirstMMR = self.GetUserMMR(FirstPlayer)
+        SecondMMR = self.GetUserMMR(SecondPlayer)
 
-    ### INSERT закрытия лобби (ДОБАВИТЬ ИЗМЕНЕНИЯ В ММР!!!)
-    def EndLobby(self, login, correctanswer, id):
         con = pymysql.connect(host=Host, user=User, password=Pass, database=DB, cursorclass=pymysql.cursors.DictCursor)
         cur = con.cursor()
-        sql = "UPDATE `Lobby` SET `SecondPlayer`=%s,`CorrectAnswerSecondPlayer`=%s,`LobbyOpen`=0, `MMR`=10 WHERE `ID` = %s"
-        cur.execute(sql, (login, correctanswer, id))
+        sql = "SELECT `FirstPlayerAns` FROM `Lobby` WHERE `ID` = %s"
+        cur.execute(sql, LobbyID)
         res = cur.fetchone()
         con.commit()
         con.close()
 
+        Players = [FirstPlayer, SecondPlayer]
+        CurMMR = [FirstMMR, SecondMMR]
+        MMRs = [MMR, MMR]
+
+        FirstAns = int(res['FirstPlayerAns'])
+        if FirstAns > int(SecondAns):
+            MMRs[1] *= -1
+            for i in range(2):
+                con = pymysql.connect(host=Host, user=User, password=Pass, database=DB, cursorclass=pymysql.cursors.DictCursor)
+                cur = con.cursor()
+                sql = "UPDATE `Users` SET `MMR`=%s WHERE `Login` = %s"
+                cur.execute(sql, (CurMMR[i] + MMRs[i], Players[i]))
+                con.commit()
+                con.close()
+        elif FirstAns < int(SecondAns):
+            MMRs[0] *= -1
+            for i in range(2):
+                con = pymysql.connect(host=Host, user=User, password=Pass, database=DB, cursorclass=pymysql.cursors.DictCursor)
+                cur = con.cursor()
+                sql = "UPDATE `Users` SET `MMR`=%s WHERE `Login` = %s"
+                cur.execute(sql, (CurMMR[i] + MMRs[i], Players[i]))
+                con.commit()
+                con.close()
+        else:
+            for i in range(2):
+                con = pymysql.connect(host=Host, user=User, password=Pass, database=DB, cursorclass=pymysql.cursors.DictCursor)
+                cur = con.cursor()
+                sql = "UPDATE `Users` SET `MMR`=%s WHERE `Login` = %s"
+                cur.execute(sql, (DefaultLobbyMMR, Players[i]))
+                con.commit()
+                con.close()
+
+
+
+    ### Закрытие лобби
+    def EndLobby(self, login, correctanswer, id, mmr, enemymmr, enemylogin):
+        FirstMMR = int(enemymmr)
+        SecondMMR = int(mmr)
+        if FirstMMR > SecondMMR:
+            Dop = int((100 * SecondMMR) / FirstMMR)
+            LobbyMMR = DefaultLobbyMMR + (DefaultLobbyMMR - int(DefaultLobbyMMR * (Dop / 100))) # Дефолтное значение + Дефолтное значение умноженное на процентное соотношение ММР игроков
+        elif FirstMMR < SecondMMR:
+            Dop = int((100 * SecondMMR) / FirstMMR)
+            LobbyMMR = DefaultLobbyMMR + (int(DefaultLobbyMMR * (Dop / 100)) - DefaultLobbyMMR)
+        else:
+            LobbyMMR = DefaultLobbyMMR
+
+        con = pymysql.connect(host=Host, user=User, password=Pass, database=DB, cursorclass=pymysql.cursors.DictCursor)
+        cur = con.cursor()
+        sql = "UPDATE `Lobby` SET `SecondPlayer`=%s,`SecondPlayerAns`=%s, `SecondMMR`=%s, `LobbyOpen`=0, `MMR`=%s WHERE `ID` = %s"
+        cur.execute(sql, (login, correctanswer, mmr, LobbyMMR, id))
+        print(con.insert_id())
+        con.commit()
+        con.close()
+        self.SupEndLobbyChangeMMR(enemylogin, login, correctanswer, LobbyMMR, id)
 
 
 

@@ -150,8 +150,12 @@ class Diplom(Resource):
     def EndLobby():
         login = request.form['secondplayer']
         id = request.form['id']
+        print("ID", id)
         correctanswer = request.form['correctanswer']
-        DB.EndLobby(login, correctanswer, id)
+        mmr = request.form['mmr']
+        enemymmr = request.form['enemymmr']
+        enemylogin = request.form['enemylogin']
+        DB.EndLobby(login, correctanswer, id, mmr, enemymmr, enemylogin)
         return "Successfull End Lobby", 226
 
 
