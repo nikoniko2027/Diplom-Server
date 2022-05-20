@@ -338,6 +338,12 @@ class ConnectDB:
     def EndLobby(self, login, correctanswer, id, mmr, enemymmr, enemylogin):
         FirstMMR = int(enemymmr)
         SecondMMR = int(mmr)
+
+        if FirstMMR <= 0:
+            FirstMMR = 1
+        if SecondMMR <= 0:
+            SecondMMR = 1
+
         if FirstMMR > SecondMMR:
             Dop = int((100 * SecondMMR) / FirstMMR)
             LobbyMMR = DefaultLobbyMMR + (DefaultLobbyMMR - int(DefaultLobbyMMR * (Dop / 100))) # Дефолтное значение + Дефолтное значение умноженное на процентное соотношение ММР игроков
@@ -351,7 +357,6 @@ class ConnectDB:
         cur = con.cursor()
         sql = "UPDATE `Lobby` SET `SecondPlayer`=%s,`SecondPlayerAns`=%s, `SecondMMR`=%s, `LobbyOpen`=0, `MMR`=%s WHERE `ID` = %s"
         cur.execute(sql, (login, correctanswer, mmr, LobbyMMR, id))
-        print(con.insert_id())
         con.commit()
         con.close()
         self.SupEndLobbyChangeMMR(enemylogin, login, correctanswer, LobbyMMR, id)
@@ -366,7 +371,6 @@ class ConnectDB:
         sql = "SELECT * FROM `Task`"
         cur.execute(sql)
         res = cur.fetchone()
-        #print(res)
         con.commit()
         con.close()
         return res

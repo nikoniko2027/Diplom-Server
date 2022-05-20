@@ -29,7 +29,6 @@ class Diplom(Resource):
         login = request.form['login']
         password = request.form['pass']
         email = request.form['email']
-        print(DB.GetStatus())
         if DB.GetStatus():
             return DB.UserRegister(login, password, email)
         else:
@@ -150,7 +149,6 @@ class Diplom(Resource):
     def EndLobby():
         login = request.form['secondplayer']
         id = request.form['id']
-        print("ID", id)
         correctanswer = request.form['correctanswer']
         mmr = request.form['mmr']
         enemymmr = request.form['enemymmr']
