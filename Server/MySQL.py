@@ -194,13 +194,12 @@ class ConnectDB:
             ### Получение вопросов
         con = pymysql.connect(host=Host, user=User, password=Pass, database=DB, cursorclass=pymysql.cursors.DictCursor)
         cur = con.cursor()
-        if login == "Random":
+        if gametype == "Random":
             sql = "SELECT `ID` FROM `Task`"
             cur.execute(sql)
         else:
             sql = "SELECT `ID` FROM `Task` WHERE `Type` LIKE %s"
             cur.execute(sql, gametype)
-
         con.commit()
         con.close()
 
@@ -209,7 +208,9 @@ class ConnectDB:
         for i in cur:
             tasks.append(i['ID'])
 
+
         res = list()
+        print(tasks)
         for _ in range(5):
             X = random.choice(tasks)
             res.append(X)
