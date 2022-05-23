@@ -8,6 +8,7 @@ api = Api(app)
 
 from MySQL import ConnectDB
 import uuid
+import os
 
 DB = ConnectDB()
 
@@ -228,9 +229,7 @@ class Diplom(Resource):
         ### Возврат фото с сервера
     @app.route('/ReturnFile', methods=['GET'])
     def ReturnFile():
-        print(request.args['ID']) # ID Фото для возврата
-        file = os.getcwd() + "/Images/Niko.png"
-        return send_file(file, mimetype='image/png'), 202
+        return send_file(os.getcwd() + "\\Images\\" + request.args['Image'], mimetype='image/png'), 250
 
 
 

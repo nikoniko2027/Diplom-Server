@@ -210,7 +210,6 @@ class ConnectDB:
 
 
         res = list()
-        print(tasks)
         for _ in range(5):
             X = random.choice(tasks)
             res.append(X)
@@ -329,7 +328,7 @@ class ConnectDB:
                 con = pymysql.connect(host=Host, user=User, password=Pass, database=DB, cursorclass=pymysql.cursors.DictCursor)
                 cur = con.cursor()
                 sql = "UPDATE `Users` SET `MMR`=%s WHERE `Login` = %s"
-                cur.execute(sql, (DefaultLobbyMMR, Players[i]))
+                cur.execute(sql, (CurMMR[i] + DefaultLobbyMMR, Players[i]))
                 con.commit()
                 con.close()
 
